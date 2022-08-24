@@ -51,6 +51,12 @@
                             {
                                 name: 'moo',
                                 value: 150,
+                                nodes: [
+                                    {
+                                        name: 'meh',
+                                        value: 30,
+                                    },
+                                ]
                             },
                         ]
                     },
@@ -61,6 +67,12 @@
                             {
                                 name: 'cow',
                                 value: 900,
+                                nodes: [
+                                    {
+                                        name: 'xxx',
+                                        value: 75,
+                                    },
+                                ]
                             },
                         ]
                     },
@@ -68,9 +80,9 @@
             };
 
             let flat = [
-                Array(6),
-                Array(6),
-                Array(6),
+                Array(7),
+                Array(7),
+                Array(7),
             ];
 
             let fn = (n, lft, rgt, lvl, par, idx, gidx) => {

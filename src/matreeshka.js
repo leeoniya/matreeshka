@@ -84,9 +84,15 @@ function matreeshka(opts, flat, targ) {
             let y = Math.round(lvl * cellHgt);
             let x = xPosByLevel[lvl];
 
-            if (lvl >= prevLvl)
+            // advance starting x offset for next sibling
+            if (lvl >= prevLvl) {
+                if (lvl == prevLvl)
+                    xPosByLevel.fill(xPosByLevel[lvl], lvl + 1);
+
                 xPosByLevel[lvl] += cellWid;
-            else if (lvl < prevLvl)
+            }
+            // reset
+            else
                 xPosByLevel.fill(xPosByLevel[lvl], lvl + 1);
 
             prevLvl = lvl;
