@@ -65,8 +65,7 @@ function matreeshka(opts, flat, targ) {
 
         index = new Flatbush(stack.length, 512, Int16Array);
 
-        ctx.save();
-        ctx.font = '18px Arial';
+        ctx.clearRect(0, 0, canWid, canHgt);
 
         let path = new Path2D();
 
@@ -94,10 +93,10 @@ function matreeshka(opts, flat, targ) {
             index.add(x + cellGap, y + cellGap, x + cellWid - cellGap, y + cellHgt - cellGap);
         } while (++si < stack.length);
 
+        ctx.save();
         ctx.fillStyle = '#eee';
         ctx.globalCompositeOperation = 'destination-over';
         ctx.fill(path);
-
         ctx.restore();
 
         index.finish();
@@ -117,6 +116,8 @@ function matreeshka(opts, flat, targ) {
 
         cellHgt = canHgt / levels;
 
+        ctx.font = '18px Arial';
+
         setFocus(0);
     }
 
@@ -129,7 +130,6 @@ function matreeshka(opts, flat, targ) {
     });
     can.addEventListener('click', e => {
         if (hoveredIdx != null) {
-            ctx.clearRect(0, 0, canWid, canHgt);
             setFocus(stack[hoveredIdx]);
 
             hoveredIdx = null;
