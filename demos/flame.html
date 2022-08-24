@@ -42,11 +42,11 @@
                 nodes: [
                     {
                         name: 'foo',
-                        value: 700,
+                        value: 650,
                         nodes: [
                             {
                                 name: 'baz',
-                                value: 500,
+                                value: 300,
                             },
                             {
                                 name: 'moo',
@@ -58,7 +58,25 @@
                                     },
                                 ]
                             },
+                            {
+                                name: 'yyy',
+                                value: 100,
+                                nodes: [
+                                    {
+                                        name: 'zzz',
+                                        value: 70,
+                                    },
+                                ]
+                            },
+                            {
+                                name: 'leaf',
+                                value: 50,
+                            },
                         ]
+                    },
+                    {
+                        name: 'shmoo',
+                        value: 50,
                     },
                     {
                         name: 'bar',
@@ -96,7 +114,7 @@
             console.log(flat);
 
             let mt = matreeshka({
-                width: 800,
+                width: 1600,
                 height: 400,
             }, flat, document.body);
         </script>
