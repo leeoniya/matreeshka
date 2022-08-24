@@ -23,6 +23,12 @@ function matreeshka(opts, flat, targ) {
     let can = document.createElement('canvas');
     let ctx = can.getContext('2d');
 
+    let chars = '';
+    for (let i = 32; i <= 126; i++)
+        chars += String.fromCharCode(i);
+
+    let pxPerChar = Math.ceil(ctx.measureText(chars).width / chars.length * pxRatio);
+
     // render
     function setFocus(idx) {
         let xPosByLevel = Array(levels).fill(0);
@@ -83,14 +89,21 @@ function matreeshka(opts, flat, targ) {
             let y = Math.round(lvl * cellHgt);
             let x = xPosByLevel[lvl];
 
+            let x0 = x + cellGap;
+            let y0 = y + cellGap;
+            let w = cellWid - cellGap * 2;
+            let h = cellHgt - cellGap * 2;
+
+            path.rect(x0, y0, w, h);
+            index.add(x0, y0, x0 + w, y0 + h);
+
+            let label = `${name} (${val})`;
+            let maxChars = Math.floor(w / pxPerChar);
+            ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
+
             xPosByLevel.fill(xPosByLevel[lvl], lvl+1);
             xPosByLevel[lvl] += cellWid
             prevLvl = lvl;
-
-            path.rect(x + cellGap, y + cellGap, cellWid - cellGap * 2, cellHgt - cellGap * 2);
-            ctx.fillText(`${name} (${val})`, x + cellGap, y + cellHgt / 2);
-
-            index.add(x + cellGap, y + cellGap, x + cellWid - cellGap, y + cellHgt - cellGap);
         } while (++si < stack.length);
 
         ctx.save();
