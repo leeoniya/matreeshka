@@ -9,9 +9,9 @@ function matreeshka(opts, flat, targ) {
     let stack = [];
     let dfltStack = Array.from(flat[0].keys());
 
-    let levels2 = Math.max(...flat[0]) + 1;
-    let cellHgt2;
-    let pxPerVal2;
+    let levels = Math.max(...flat[0]) + 1;
+    let cellHgt;
+    let pxPerVal;
 
     let root = document.createElement('div');
     root.className = 'matreeshka';
@@ -25,10 +25,10 @@ function matreeshka(opts, flat, targ) {
 
     // render
     function setFocus(idx) {
-        let xPosByLevel = Array(levels2).fill(0);
+        let xPosByLevel = Array(levels).fill(0);
         let len = flat[0].length;
 
-        pxPerVal2 = canWid / flat[1][idx];
+        pxPerVal = canWid / flat[1][idx];
         let zoomLvl = flat[0][idx];
 
         if (zoomLvl == 0)
@@ -80,8 +80,8 @@ function matreeshka(opts, flat, targ) {
             let val  = flat[1][i];
             let name = flat[2][i];
 
-            let cellWid = Math.round(lvl <= zoomLvl ? canWid : val * pxPerVal2);
-            let y = Math.round(lvl * cellHgt2);
+            let cellWid = Math.round(lvl <= zoomLvl ? canWid : val * pxPerVal);
+            let y = Math.round(lvl * cellHgt);
             let x = xPosByLevel[lvl];
 
             if (lvl >= prevLvl)
@@ -91,10 +91,10 @@ function matreeshka(opts, flat, targ) {
 
             prevLvl = lvl;
 
-            path.rect(x + cellGap, y + cellGap, cellWid - cellGap * 2, cellHgt2 - cellGap * 2);
-            ctx.fillText(`${name} (${val})`, x + cellGap, y + cellHgt2 / 2);
+            path.rect(x + cellGap, y + cellGap, cellWid - cellGap * 2, cellHgt - cellGap * 2);
+            ctx.fillText(`${name} (${val})`, x + cellGap, y + cellHgt / 2);
 
-            index.add(x + cellGap, y + cellGap, x + cellWid - cellGap, y + cellHgt2 - cellGap);
+            index.add(x + cellGap, y + cellGap, x + cellWid - cellGap, y + cellHgt - cellGap);
         } while (++si < stack.length);
 
         ctx.fillStyle = '#eee';
@@ -118,7 +118,7 @@ function matreeshka(opts, flat, targ) {
         can.style.width = `${cssWid}px`;
         can.style.height = `${cssHgt}px`;
 
-        cellHgt2 = canHgt / levels2;
+        cellHgt = canHgt / levels;
 
         setFocus(0);
     }
