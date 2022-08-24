@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Matreeshka</title>
+        <script src="../lib/flatbush.js"></script>
+        <script src="../src/matreeshka.js"></script>
+        <script src="./helpers.js"></script>
+
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+            }
+
+            .matreeshka {
+                display: inline-block;
+            }
+
+            .matreeshka canvas {
+                display: block;
+            }
+
+            .matreeshka .hover {
+                position: absolute;
+                background: red;
+                opacity: 0.2;
+                pointer-events: none;
+
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+            let tree = {
+                name: 'root',
+                value: 1700,
+                nodes: [
+                    {
+                        name: 'foo',
+                        value: 700,
+                        nodes: [
+                            {
+                                name: 'baz',
+                                value: 500,
+                            },
+                            {
+                                name: 'moo',
+                                value: 150,
+                            },
+                        ]
+                    },
+                    {
+                        name: 'bar',
+                        value: 1000,
+                        nodes: [
+                            {
+                                name: 'cow',
+                                value: 900,
+                            },
+                        ]
+                    },
+                ]
+            };
+
+            let flat = [
+                Array(6),
+                Array(6),
+                Array(6),
+            ];
+
+            let fn = (n, lft, rgt, lvl, par, idx, gidx) => {
+                flat[0][gidx] = lvl;
+                flat[1][gidx] = n.value;
+                flat[2][gidx] = n.name;
+            };
+
+            mptt2(fn, tree, 1, 0);
+
+            console.log(flat);
+
+            let mt = matreeshka({
+                width: 800,
+                height: 400,
+            }, flat, document.body);
+        </script>
+    </body>
+</html>

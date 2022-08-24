@@ -1,0 +1,19 @@
+{
+  "name": "matreeshka",
+  "version": "0.0.1",
+  "description": "",
+  "main": "src/matreeshka.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leeoniya/matreeshka.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/leeoniya/matreeshka/issues"
+  },
+  "homepage": "https://github.com/leeoniya/matreeshka#readme"
+}
