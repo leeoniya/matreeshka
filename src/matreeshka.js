@@ -1,200 +1,275 @@
+/*
+const palette = [
+	'#ffffcc',
+	'#fff0a9',
+	'#fee087',
+	'#fec965',
+	'#feab4b',
+	'#fd893c',
+	'#fa5c2e',
+	'#ec3023',
+	'#d31121',
+	'#af0225',
+	'#800026',
+];
+*/
+
+const palette = [
+	'#eee'
+];
+
+// TODO: select palette (ant design, greens, reds) based on callback for index, choose random color from it?
+// TODO: color by time at top of stack (self)
+// TODO: name filter, other field filter, ancestor filter
+// TODO: color by callback (fuzzy text match)
+// TODO: dynamic font color based on contrast
+
+const VALUE_THRESHOLD_ADAPTIVE = true;
+const VALUE_THRESHOLD = 0; // 1e-3, 2e-3, 0
+const LEVEL_THRESHOLD = 1e3;
+
 function matreeshka(opts, flat, targ) {
-    const cellGap = 2;
+	const cellGap = 1;
 
-    let pxRatio = devicePixelRatio;
-    let cssWid, cssHgt;
-    let canWid, canHgt;
+	let pxRatio = devicePixelRatio;
+	let cssWid, cssHgt;
+	let canWid, canHgt;
 
-    let index;
-    let stack = [];
-    let dfltStack = Array.from(flat[0].keys());
+	let index;
+	let stack = [];
+	let dfltStack = Array.from(flat[0].keys());
 
-    let levels = Math.max(...flat[0]) + 1;
-    let cellHgt;
-    let pxPerVal;
+	// or sort() and take last element? or loop?
+	let levels = Math.max(...new Set(flat[0])) + 1;
+	let cellHgt;
+	let pxPerVal;
 
-    let root = document.createElement('div');
-    root.className = 'matreeshka';
+	let root = document.createElement('div');
+	root.className = 'matreeshka';
 
-    let hover = document.createElement('div');
-    hover.className = 'hover';
-    hoverStyle = hover.style;
+	let hover = document.createElement('div');
+	hover.className = 'hover';
+	hoverStyle = hover.style;
 
-    let can = document.createElement('canvas');
-    let ctx = can.getContext('2d');
+	let can = document.createElement('canvas');
+	let ctx = can.getContext('2d');
 
-    let chars = '';
-    for (let i = 32; i <= 126; i++)
-        chars += String.fromCharCode(i);
+	let rootVal = flat[1][0];
 
-    let pxPerChar = Math.ceil(ctx.measureText(chars).width / chars.length * pxRatio);
+	let chars = '';
+	for (let i = 32; i <= 126; i++)
+		chars += String.fromCharCode(i);
 
-    // render
-    function setFocus(idx) {
-        let xPosByLevel = Array(levels).fill(0);
-        let len = flat[0].length;
+	let pxPerChar = Math.ceil(ctx.measureText(chars).width / chars.length * pxRatio);
 
-        pxPerVal = canWid / flat[1][idx];
-        let zoomLvl = flat[0][idx];
+	// render
+	function setFocus(idx) {
+		let xPosByLevel = Array(levels).fill(0);
+		let len = flat[0].length;
 
-        if (zoomLvl == 0)
-            stack = dfltStack;
-        else {
-            // indicies from root in focused stack
-            stack = [];
-            let i;
+		let baseVal = flat[1][idx];
 
-            // add all ancestors (except root, to avoid excess iteration)
-            i = idx;
-            let ancestLvl = zoomLvl;
-            while (ancestLvl > 1) {
-                i--;
-                let lvl = flat[0][i];
+		pxPerVal = canWid / baseVal;
+		let zoomLvl = flat[0][idx];
 
-                if (lvl < ancestLvl) {
-                    stack.push(i);
-                    ancestLvl = lvl;
-                }
-            }
+		if (zoomLvl == 0)
+			stack = dfltStack;
+		else {
+			// indicies from root in focused stack
+			stack = [];
+			let i;
 
-            // add root
-            stack.push(0);
+			// add all ancestors (except root, to avoid excess iteration)
+			i = idx;
+			let ancestLvl = zoomLvl;
+			while (ancestLvl > 1) {
+				i--;
+				let lvl = flat[0][i];
 
-            stack.reverse();
+				if (lvl < ancestLvl) {
+					stack.push(i);
+					ancestLvl = lvl;
+				}
+			}
 
-            // add self & all descendants
-            i = idx;
-            do {
-                stack.push(i);
-            } while (i++ < len && flat[0][i] > zoomLvl);
-        }
+			// add root
+			stack.push(0);
 
-        index = new Flatbush(stack.length, 512, Int16Array);
+			stack.reverse();
 
-        ctx.clearRect(0, 0, canWid, canHgt);
+			// add self & all descendants
+			i = idx;
+			do {
+				stack.push(i);
+			} while (i++ < len && flat[0][i] > zoomLvl);
+		}
 
-        let path = new Path2D();
+		if (VALUE_THRESHOLD > 0 || LEVEL_THRESHOLD > 0) {
+			let valThresh = VALUE_THRESHOLD * (VALUE_THRESHOLD_ADAPTIVE ? baseVal : rootVal);
 
-        let si = 0;
-        i = stack[si];
-        let prevLvl = flat[0][i];
-        do {
-            i = stack[si];
+			let _stack = [];
 
-            let lvl  = flat[0][i];
-            let val  = flat[1][i];
-            let name = flat[2][i];
+			for (let i = 0; i < stack.length; i++) {
+				let fi = stack[i];
+				let val = flat[1][fi];
+				let lvl = flat[0][fi];
 
-            let cellWid = Math.round(lvl <= zoomLvl ? canWid : val * pxPerVal);
-            let y = Math.round(lvl * cellHgt);
-            let x = xPosByLevel[lvl];
+				if (val >= valThresh && lvl <= LEVEL_THRESHOLD)
+					_stack.push(fi);
+			}
 
-            let x0 = x + cellGap;
-            let y0 = y + cellGap;
-            let w = cellWid - cellGap * 2;
-            let h = cellHgt - cellGap * 2;
+			stack = _stack;
+		}
 
-            path.rect(x0, y0, w, h);
-            index.add(x0, y0, x0 + w, y0 + h);
+		console.log("filtered", stack.length);
 
-            let label = `${name} (${val})`;
-            let maxChars = Math.floor(w / pxPerChar);
-            ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
+		index = new Flatbush(stack.length, 512, Int16Array);
 
-            xPosByLevel.fill(xPosByLevel[lvl], lvl+1);
-            xPosByLevel[lvl] += cellWid
-            prevLvl = lvl;
-        } while (++si < stack.length);
+		ctx.clearRect(0, 0, canWid, canHgt);
 
-        ctx.save();
-        ctx.fillStyle = '#eee';
-        ctx.globalCompositeOperation = 'destination-over';
-        ctx.fill(path);
-        ctx.restore();
+		let paths = palette.map(c => new Path2D());
 
-        index.finish();
-    }
+		let si = 0, i;
+		do {
+			i = stack[si];
 
-    function setData() {
+			let lvl  = flat[0][i];
+			let val  = flat[1][i];
+			let name = flat[2][i];
 
-    }
+			// custom matching function (by label, by value, by ancestor, by tag) -> color palette, random from narrow range, greens, oranges, pinks, blues, purples
+			// by % of total
 
-    function setSize({width, height}) {
-        cssWid = width;
-        cssHgt = height;
-        canWid = can.width = Math.round(cssWid * pxRatio);
-        canHgt = can.height = Math.round(cssHgt * pxRatio);
-        can.style.width = `${cssWid}px`;
-        can.style.height = `${cssHgt}px`;
+			let pctOfTotal = val / baseVal;
+			let paletteIdx = Math.min(Math.floor(pctOfTotal * palette.length), palette.length - 1);
+		//	let paletteIdx = Math.min(Math.floor(Math.random() * palette.length), palette.length - 1);
 
-        cellHgt = canHgt / levels;
+			let cellWid = Math.round(lvl <= zoomLvl ? canWid : val * pxPerVal);
 
-        ctx.font = '18px Arial';
+			let y = Math.round(lvl * cellHgt);
+			let x = xPosByLevel[lvl];
 
-        setFocus(0);
-    }
+			let x0 = x + cellGap;
+			let y0 = y + cellGap;
+			let w = cellWid - cellGap * 2;
+			let h = cellHgt - cellGap * 2;
 
-    can.addEventListener('mousemove', e => {
-        searchFlat(e.offsetX * pxRatio, e.offsetY * pxRatio);
-    });
-    can.addEventListener('mouseleave', e => {
-        hoverStyle.display = "none";
-        hoveredIdx = null;
-    });
-    can.addEventListener('click', e => {
-        if (hoveredIdx != null) {
-            setFocus(stack[hoveredIdx]);
+			let fillPath = paths[paletteIdx];
 
-            hoveredIdx = null;
-            searchFlat(e.offsetX * pxRatio, e.offsetY * pxRatio);
-        }
-    });
+			fillPath.rect(x0, y0, w, h);
+			index.add(x0, y0, x0 + w, y0 + h);
 
-    let hoveredIdx = null;
+			let maxChars = Math.floor(w / pxPerChar);
 
-    function searchFlat(xMin, yMin, xMax, yMax) {
-        let flatIdxs = index.search(xMin, yMin, xMax ?? xMin + 1, yMax ?? yMin + 1);
+			if (maxChars > 1) {
+				//let label = `${name} (${val})`;
+				let label = name.split(" ")[0];
+				ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
+			}
 
-        if (flatIdxs.length > 0) {
-            for (let j = 0; j < flatIdxs.length; j++) {
-                let idx = flatIdxs[j];
+			for (let nxtLvl = lvl + 1, v = xPosByLevel[lvl]; nxtLvl < levels; nxtLvl++)
+				xPosByLevel[nxtLvl] = v;
 
-                let offs = index._indices.indexOf(idx) * 4;
-                let minX = index._boxes[offs++];
-                let minY = index._boxes[offs++];
-                let maxX = index._boxes[offs++];
-                let maxY = index._boxes[offs++];
+			xPosByLevel[lvl] += cellWid
+		} while (++si < stack.length);
 
-                if (hoveredIdx !== idx) {
-                    hoverStyle.display = "block";
+		ctx.save();
+		ctx.globalCompositeOperation = 'destination-over';
 
-                    hoverStyle.top = `${Math.round(minY / pxRatio)}px`;
-                    hoverStyle.left = `${Math.round(minX / pxRatio)}px`;
-                    hoverStyle.width = `${Math.round((maxX - minX) / pxRatio)}px`;
-                    hoverStyle.height = `${Math.round((maxY - minY) / pxRatio)}px`;
+		for (let i = 0; i < paths.length; i++) {
+			ctx.fillStyle = palette[i];
+			ctx.fill(paths[i]);
+		}
 
-                    hoveredIdx = idx;
-                }
+		ctx.restore();
 
-                break;
-            }
-        }
-        else {
-            hoverStyle.display = "none";
-            hoveredIdx = null;
-        }
-    }
+		index.finish();
+	}
 
-    setSize(opts);
+	function setData() {
 
-    root.appendChild(can)
-    root.appendChild(hover);
-    targ.appendChild(root);
+	}
 
-    return {
-        root,
-        setSize,
-        setData,
-        setFocus,
-    };
+	function setSize({width, height}) {
+		cssWid = width;
+		cssHgt = height;
+		canWid = can.width = Math.round(cssWid * pxRatio);
+		canHgt = can.height = Math.round(cssHgt * pxRatio);
+		can.style.width = `${cssWid}px`;
+		can.style.height = `${cssHgt}px`;
+
+		cellHgt = canHgt / levels;
+
+		ctx.font = '15px monospace';
+
+		setFocus(0);
+	}
+
+	can.addEventListener('mousemove', e => {
+		searchFlat(e.offsetX * pxRatio, e.offsetY * pxRatio);
+	});
+	can.addEventListener('mouseleave', e => {
+		hoverStyle.display = "none";
+		hoveredIdx = null;
+	});
+	can.addEventListener('click', e => {
+		console.time('setFocus');
+
+		if (hoveredIdx != null) {
+			setFocus(stack[hoveredIdx]);
+
+			hoveredIdx = null;
+			searchFlat(e.offsetX * pxRatio, e.offsetY * pxRatio);
+		}
+
+		console.timeEnd('setFocus');
+	});
+
+	let hoveredIdx = null;
+
+	function searchFlat(xMin, yMin, xMax, yMax) {
+		let flatIdxs = index.search(xMin, yMin, xMax ?? xMin + 1, yMax ?? yMin + 1);
+
+		if (flatIdxs.length > 0) {
+			for (let j = 0; j < flatIdxs.length; j++) {
+				let idx = flatIdxs[j];
+
+				let offs = index._indices.indexOf(idx) * 4;
+				let minX = index._boxes[offs++];
+				let minY = index._boxes[offs++];
+				let maxX = index._boxes[offs++];
+				let maxY = index._boxes[offs++];
+
+				if (hoveredIdx !== idx) {
+					hoverStyle.display = "block";
+
+					hoverStyle.top = `${Math.round(minY / pxRatio)}px`;
+					hoverStyle.left = `${Math.round(minX / pxRatio)}px`;
+					hoverStyle.width = `${Math.round((maxX - minX) / pxRatio)}px`;
+					hoverStyle.height = `${Math.round((maxY - minY) / pxRatio)}px`;
+
+					hoveredIdx = idx;
+				}
+
+				break;
+			}
+		}
+		else {
+			hoverStyle.display = "none";
+			hoveredIdx = null;
+		}
+	}
+
+	setSize(opts);
+
+	root.appendChild(can)
+	root.appendChild(hover);
+	targ.appendChild(root);
+
+	return {
+		root,
+		setSize,
+		setData,
+		setFocus,
+	};
 }
