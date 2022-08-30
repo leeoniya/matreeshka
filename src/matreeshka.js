@@ -231,7 +231,7 @@ function matreeshka(opts, flat, targ) {
 				}
 			}
 			else {
-				index.add(0, 0, 1, 1);
+				//index.add(0, 0, 1, 1);
 				sm++;
 			}
 
