@@ -15,7 +15,8 @@ const palette = [
 */
 
 const palette = [
-	'#eee'
+	'#eee',
+	"#a5d6a7",
 ];
 
 // TODO: select palette (ant design, greens, reds) based on callback for index, choose random color from it?
@@ -29,7 +30,7 @@ const VALUE_THRESHOLD = 0; // 1e-3, 2e-3, 0
 const LEVEL_THRESHOLD = 1e3;
 
 function matreeshka(opts, flat, targ) {
-	const cellGap = 1;
+	const cellGap = 0.5;
 
 	let pxRatio = devicePixelRatio;
 	let cssWid, cssHgt;
@@ -64,7 +65,13 @@ function matreeshka(opts, flat, targ) {
 
 	// render
 	function setFocus(idx) {
+		// where the next sibling should start
 		let xPosByLevel = Array(levels).fill(0);
+
+		// x0s or merged rects, defered rendering until non-tiny or non-adjacent sibling encountered, else accumulates
+		let x0PosByLevel = Array(levels).fill(-1);
+		let x1PosByLevel = Array(levels).fill(-1);
+
 		let len = flat[0].length;
 
 		let baseVal = flat[1][idx];
@@ -129,6 +136,9 @@ function matreeshka(opts, flat, targ) {
 
 		let paths = palette.map(c => new Path2D());
 
+		let merges = 0;
+		let sm = 0;
+
 		let si = 0, i;
 		do {
 			i = stack[si];
@@ -137,41 +147,102 @@ function matreeshka(opts, flat, targ) {
 			let val  = flat[1][i];
 			let name = flat[2][i];
 
+
 			// custom matching function (by label, by value, by ancestor, by tag) -> color palette, random from narrow range, greens, oranges, pinks, blues, purples
 			// by % of total
 
 			let pctOfTotal = val / baseVal;
-			let paletteIdx = Math.min(Math.floor(pctOfTotal * palette.length), palette.length - 1);
+		//	let paletteIdx = Math.min(Math.floor(pctOfTotal * palette.length), palette.length - 1);
 		//	let paletteIdx = Math.min(Math.floor(Math.random() * palette.length), palette.length - 1);
 
-			let cellWid = Math.round(lvl <= zoomLvl ? canWid : val * pxPerVal);
+			let paletteIdx = 1;
 
-			let y = Math.round(lvl * cellHgt);
+			let cellWid = lvl <= zoomLvl ? canWid : val * pxPerVal;
+
+			let y = lvl * cellHgt;
 			let x = xPosByLevel[lvl];
 
-			let x0 = x + cellGap;
-			let y0 = y + cellGap;
-			let w = cellWid - cellGap * 2;
-			let h = cellHgt - cellGap * 2;
+			// TODO: deal in values to reduce compute?
+			if (x0PosByLevel[lvl] == -1) {
+				if (cellWid < 7) {
+					x0PosByLevel[lvl] = x; // start of merged cell
+					x1PosByLevel[lvl] = x + cellWid;
+				}
+			} else {
+				if (cellWid < 7) {
+					// if end of prev cell at this level (if adjacent-ish by 1px)
+					if (x1PosByLevel[lvl] + 1 >= x) {
+						merges++;
+						// merge!
+						x1PosByLevel[lvl] = x + cellWid;
+					} else {
+						// draw pending! if cell width > 5?
+						paletteIdx = 0;
+						let x2 = x0PosByLevel[lvl];
+						let cellWid2 = x1PosByLevel[lvl] - x2;
 
-			let fillPath = paths[paletteIdx];
+						let x0 = x2 + cellGap;
+						let y0 = y + cellGap;
+						let w = cellWid2 - cellGap * 2;
+						let h = cellHgt - cellGap * 2;
+						let fillPath = paths[paletteIdx];
+						fillPath.rect(x0, y0, w, h);
 
-			fillPath.rect(x0, y0, w, h);
-			index.add(x0, y0, x0 + w, y0 + h);
+						// reset, does nothing?
+						x0PosByLevel[lvl] = x; // start of merged cell
+						x1PosByLevel[lvl] = x + cellWid;
+					}
+				} else {
+					// draw pending! if cell width > 5?
+					paletteIdx = 0;
+					let x = x0PosByLevel[lvl];
+					let cellWid = x1PosByLevel[lvl] - x;
 
-			let maxChars = Math.floor(w / pxPerChar);
+					let x0 = x + cellGap;
+					let y0 = y + cellGap;
+					let w = cellWid - cellGap * 2;
+					let h = cellHgt - cellGap * 2;
+					let fillPath = paths[paletteIdx];
+					fillPath.rect(x0, y0, w, h);
 
-			if (maxChars > 1) {
-				//let label = `${name} (${val})`;
-				let label = name.split(" ")[0];
-				ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
+					// reset
+					x0PosByLevel[lvl] = -1; // start of merged cell
+				}
+			}
+
+			if (cellWid >= 7) {
+				paletteIdx = 1;
+				let x0 = x + cellGap;
+				let y0 = y + cellGap;
+				let w = cellWid - cellGap * 2;
+				let h = cellHgt - cellGap * 2;
+
+				let fillPath = paths[paletteIdx];
+
+				fillPath.rect(x0, y0, w, h);
+				index.add(x0, y0, x0 + w, y0 + h);
+
+				let maxChars = Math.floor(w / pxPerChar);
+
+				if (maxChars > 1) {
+					//let label = `${name} (${val})`;
+					let label = name.split(" ")[0];
+					ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
+				}
+			}
+			else {
+				index.add(0, 0, 1, 1);
+				sm++;
 			}
 
 			for (let nxtLvl = lvl + 1, v = xPosByLevel[lvl]; nxtLvl < levels; nxtLvl++)
 				xPosByLevel[nxtLvl] = v;
 
-			xPosByLevel[lvl] += cellWid
+			xPosByLevel[lvl] += cellWid;
 		} while (++si < stack.length);
+
+		console.log('merges', merges);
+		console.log('sm', sm);
 
 		ctx.save();
 		ctx.globalCompositeOperation = 'destination-over';
