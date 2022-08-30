@@ -1,3 +1,7 @@
+const START_OFFSET = 0;
+const VALUE_OFFSET = 1;
+const NAME_OFFSET = 3;
+
 let response = {
     "results": {
         "A": {
