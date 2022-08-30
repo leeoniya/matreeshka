@@ -1,239 +1,239 @@
 <!doctype html>
 <html>
-    <head>
-        <title>Matreeshka</title>
-        <script src="../lib/flatbush.js"></script>
-        <script src="../src/matreeshka.js"></script>
-        <script src="./helpers.js"></script>
-        <script src="./data3.js"></script>
+	<head>
+		<title>Matreeshka</title>
+		<script src="../lib/flatbush.js"></script>
+		<script src="../src/matreeshka.js"></script>
+		<script src="./helpers.js"></script>
+		<script src="./data3.js"></script>
 
-        <script>
-        /*
-            const START_OFFSET = 0;
-            const VALUE_OFFSET = 1;
-            const NAME_OFFSET = 2;
-        */
+		<script>
+		/*
+			const START_OFFSET = 0;
+			const VALUE_OFFSET = 1;
+			const NAME_OFFSET = 2;
+		*/
 
-            function respToTree(resp) {
-                let fr = resp.results.A.frames[0];
+			function respToTree(resp) {
+				let fr = resp.results.A.frames[0];
 
-                let levels = fr.data.values[0].map(strArr => JSON.parse(strArr));
-                let names = fr.schema.meta.custom.Names;
-                let root = levels[0];
-                let offset = root.length;
+				let levels = fr.data.values[0].map(strArr => JSON.parse(strArr));
+				let names = fr.schema.meta.custom.Names;
+				let root = levels[0];
+				let offset = root.length;
 
-                function fill(par) {
-                    let li = par.level + 1;
-                    if (li < levels.length) {
-                        let lvl = levels[li];
+				function fill(par) {
+					let li = par.level + 1;
+					if (li < levels.length) {
+						let lvl = levels[li];
 
-                        let accStart = 0;
+						let accStart = 0;
 
-                        for (let ni = 0; ni < lvl.length; ni += offset) {
-                            let start = lvl[ni + START_OFFSET];
-                            let value = lvl[ni + VALUE_OFFSET];
+						for (let ni = 0; ni < lvl.length; ni += offset) {
+							let start = lvl[ni + START_OFFSET];
+							let value = lvl[ni + VALUE_OFFSET];
 
-                            accStart += start;
+							accStart += start;
 
-                            if (accStart >= par.start) {
-                                if (accStart >= par.start + par.value)
-                                    break;
+							if (accStart >= par.start) {
+								if (accStart >= par.start + par.value)
+									break;
 
-                                let node = {
-                                    level: li,
-                                    start: accStart,
-                                    name: names[lvl[ni+NAME_OFFSET]],
-                                    value: value,
-                                    nodes: [],
-                                };
+								let node = {
+									level: li,
+									start: accStart,
+									name: names[lvl[ni+NAME_OFFSET]],
+									value: value,
+									nodes: [],
+								};
 
-                                fill(node);
+								fill(node);
 
-                                par.nodes.push(node);
-                            }
+								par.nodes.push(node);
+							}
 
-                            accStart += value;
-                        }
-                    }
+							accStart += value;
+						}
+					}
 
-                    return par;
-                }
+					return par;
+				}
 
-                console.time("tree");
-                let tree = fill({
-                    level: 0,
-                    start: 0,
-                    name: names[root[NAME_OFFSET]],
-                    value: root[1],
-                    nodes: [],
-                });
-                console.timeEnd("tree");
+				console.time("tree");
+				let tree = fill({
+					level: 0,
+					start: 0,
+					name: names[root[NAME_OFFSET]],
+					value: root[1],
+					nodes: [],
+				});
+				console.timeEnd("tree");
 
-                return {
-                    levels,
-                    tree,
-                };
-            }
-        </script>
+				return {
+					levels,
+					tree,
+				};
+			}
+		</script>
 
-        <style>
-            *,
-            *::before,
-            *::after {
-                box-sizing: border-box;
-            }
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
 
-            body {
-                margin: 0;
-            }
+			body {
+				margin: 0;
+			}
 
-            .matreeshka {
-                display: inline-block;
-            }
+			.matreeshka {
+				display: inline-block;
+			}
 
-            .matreeshka canvas {
-                display: block;
-            }
+			.matreeshka canvas {
+				display: block;
+			}
 
-            .matreeshka .hover {
-                position: absolute;
-                background: red;
-                opacity: 0.2;
-                pointer-events: none;
+			.matreeshka .hover {
+				position: absolute;
+				background: red;
+				opacity: 0.2;
+				pointer-events: none;
 
-            }
-        </style>
-    </head>
-    <body>
-        <script>
-        /*
-            let tree = {
-                name: 'root',
-                value: 1700,
-                nodes: [
-                    {
-                        name: 'foo',
-                        value: 650,
-                        nodes: [
-                            {
-                                name: 'baz',
-                                value: 300,
-                            },
-                            {
-                                name: 'moo',
-                                value: 150,
-                                nodes: [
-                                    {
-                                        name: 'meh',
-                                        value: 30,
-                                    },
-                                ]
-                            },
-                            {
-                                name: 'yyy',
-                                value: 100,
-                                nodes: [
-                                    {
-                                        name: 'zzz',
-                                        value: 70,
-                                    },
-                                ]
-                            },
-                            {
-                                name: 'leaf',
-                                value: 50,
-                            },
-                        ]
-                    },
-                    {
-                        name: 'shmoo',
-                        value: 50,
-                    },
-                    {
-                        name: 'bar',
-                        value: 1000,
-                        nodes: [
-                            {
-                                name: 'cow',
-                                value: 900,
-                                nodes: [
-                                    {
-                                        name: 'xxx',
-                                        value: 75,
-                                    },
-                                ]
-                            },
-                        ]
-                    },
-                ]
-            };
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+		/*
+			let tree = {
+				name: 'root',
+				value: 1700,
+				nodes: [
+					{
+						name: 'foo',
+						value: 650,
+						nodes: [
+							{
+								name: 'baz',
+								value: 300,
+							},
+							{
+								name: 'moo',
+								value: 150,
+								nodes: [
+									{
+										name: 'meh',
+										value: 30,
+									},
+								]
+							},
+							{
+								name: 'yyy',
+								value: 100,
+								nodes: [
+									{
+										name: 'zzz',
+										value: 70,
+									},
+								]
+							},
+							{
+								name: 'leaf',
+								value: 50,
+							},
+						]
+					},
+					{
+						name: 'shmoo',
+						value: 50,
+					},
+					{
+						name: 'bar',
+						value: 1000,
+						nodes: [
+							{
+								name: 'cow',
+								value: 900,
+								nodes: [
+									{
+										name: 'xxx',
+										value: 75,
+									},
+								]
+							},
+						]
+					},
+				]
+			};
 
-            let flat = [
-                Array(12),
-                Array(12),
-                Array(12),
-            ];
+			let flat = [
+				Array(12),
+				Array(12),
+				Array(12),
+			];
 
-            let fn = (n, lft, rgt, lvl, par, idx, gidx) => {
-                flat[0][gidx] = lvl;
-                flat[1][gidx] = n.value;
-                flat[2][gidx] = n.name;
-            };
+			let fn = (n, lft, rgt, lvl, par, idx, gidx) => {
+				flat[0][gidx] = lvl;
+				flat[1][gidx] = n.value;
+				flat[2][gidx] = n.name;
+			};
 
-            mptt2(fn, tree, 1, 0);
-        */
+			mptt2(fn, tree, 1, 0);
+		*/
 
-            // console.log(flat);
+			// console.log(flat);
 
-            // let mt = matreeshka({
-            //     width: 1200,
-            //     height: 400,
-            // }, flat, document.body);
+			// let mt = matreeshka({
+			//     width: 1200,
+			//     height: 400,
+			// }, flat, document.body);
 
-            // setInterval(() => {
-            //     mt.setFocus(0);
-            // }, 20);
+			// setInterval(() => {
+			//     mt.setFocus(0);
+			// }, 20);
 
 
-            let { tree: tree2, names } = respToTree(response);
-            response = null;
+			let { tree: tree2, names } = respToTree(response);
+			response = null;
 
-            function countNodes(node) {
-                let c = node.nodes.length;
+			function countNodes(node) {
+				let c = node.nodes.length;
 
-                for (let ch of node.nodes)
-                    c += countNodes(ch);
+				for (let ch of node.nodes)
+					c += countNodes(ch);
 
-                return c;
-            }
+				return c;
+			}
 
-            let total2 = countNodes(tree2) + 1;
+			let total2 = countNodes(tree2) + 1;
 
-            console.log("nodeCount", total2);
+			console.log("nodeCount", total2);
 
-            let flat2 = [
-                Array(total2),
-                Array(total2),
-                Array(total2),
-            ];
+			let flat2 = [
+				Array(total2),
+				Array(total2),
+				Array(total2),
+			];
 
-            let fn2 = (n, lft, rgt, lvl, par, idx, gidx) => {
-                flat2[0][gidx] = lvl;
-                flat2[1][gidx] = n.value;
-                flat2[2][gidx] = n.name;
-            };
+			let fn2 = (n, lft, rgt, lvl, par, idx, gidx) => {
+				flat2[0][gidx] = lvl;
+				flat2[1][gidx] = n.value;
+				flat2[2][gidx] = n.name;
+			};
 
-            // console.log(tree2);
+			// console.log(tree2);
 
-            mptt2(fn2, tree2, 1, 0);
-            tree2 = null;
+			mptt2(fn2, tree2, 1, 0);
+			tree2 = null;
 
-            console.time("mt2");
-            let mt2 = matreeshka({
-                width: 2545,
-                height: 2500,
-            }, flat2, document.body);
-            console.timeEnd("mt2");
-        </script>
-    </body>
+			console.time("mt2");
+			let mt2 = matreeshka({
+				width: 2545,
+				height: 2500,
+			}, flat2, document.body);
+			console.timeEnd("mt2");
+		</script>
+	</body>
 </html>

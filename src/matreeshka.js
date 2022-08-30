@@ -199,7 +199,7 @@ function matreeshka(opts, nodes, targ) {
 			i = si < lastSi ? stack[++si] : ++i;
 		} while (i < nodes[0].length && (i <= idx || nodes[0][i] > zoomLvl));
 
-		//console.log(stack);
+	//	console.log(stack);
 
 		ctx.save();
 		ctx.globalCompositeOperation = 'destination-over';
