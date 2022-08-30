@@ -42,7 +42,7 @@
                                 let node = {
                                     level: li,
                                     start: accStart,
-                                    name: lvl[ni+NAME_OFFSET],
+                                    name: names[lvl[ni+NAME_OFFSET]],
                                     value: value,
                                     nodes: [],
                                 };
@@ -63,15 +63,13 @@
                 let tree = fill({
                     level: 0,
                     start: 0,
-                    name: root[NAME_OFFSET],
+                    name: names[root[NAME_OFFSET]],
                     value: root[1],
                     nodes: [],
                 });
                 console.timeEnd("tree");
 
-
                 return {
-                    names,
                     levels,
                     tree,
                 };
@@ -234,10 +232,7 @@
             let mt2 = matreeshka({
                 width: 2545,
                 height: 2500,
-            }, {
-                nodes: flat2,
-                strings: names,
-            }, document.body);
+            }, flat2, document.body);
             console.timeEnd("mt2");
         </script>
     </body>

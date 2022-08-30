@@ -29,7 +29,7 @@ const VALUE_THRESHOLD_ADAPTIVE = true;
 const VALUE_THRESHOLD = 0; // 1e-3, 2e-3, 0
 const LEVEL_THRESHOLD = 1e3;
 
-function matreeshka(opts, {nodes, strings}, targ) {
+function matreeshka(opts, nodes, targ) {
 	const cellGap = 0.5;
 
 	let pxRatio = devicePixelRatio;
@@ -128,7 +128,7 @@ function matreeshka(opts, {nodes, strings}, targ) {
 		do {
 			let lvl  = nodes[0][i];
 			let val  = nodes[1][i];
-			let nameIdx = nodes[2][i];
+			let name = nodes[2][i];
 
 			// custom matching function (by label, by value, by ancestor, by tag) -> color palette, random from narrow range, greens, oranges, pinks, blues, purples
 			// by % of total
@@ -186,7 +186,7 @@ function matreeshka(opts, {nodes, strings}, targ) {
 
 				if (maxChars > 1) {
 					//let label = `${name} (${val})`;
-					let label = strings[nameIdx].split(" ")[0];
+					let label = name.split(" ")[0];
 					ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
 				}
 			}
