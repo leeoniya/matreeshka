@@ -42,7 +42,7 @@
                                 let node = {
                                     level: li,
                                     start: accStart,
-                                    name: names[lvl[ni+NAME_OFFSET]],
+                                    name: lvl[ni+NAME_OFFSET],
                                     value: value,
                                     nodes: [],
                                 };
@@ -63,7 +63,7 @@
                 let tree = fill({
                     level: 0,
                     start: 0,
-                    name: names[root[NAME_OFFSET]],
+                    name: root[NAME_OFFSET],
                     value: root[1],
                     nodes: [],
                 });
@@ -108,6 +108,7 @@
     </head>
     <body>
         <script>
+        /*
             let tree = {
                 name: 'root',
                 value: 1700,
@@ -182,6 +183,7 @@
             };
 
             mptt2(fn, tree, 1, 0);
+        */
 
             // console.log(flat);
 
@@ -195,7 +197,8 @@
             // }, 20);
 
 
-            let tree2 = respToTree(response).tree;
+            let { tree: tree2, names } = respToTree(response);
+            response = null;
 
             function countNodes(node) {
                 let c = node.nodes.length;
@@ -231,7 +234,10 @@
             let mt2 = matreeshka({
                 width: 2545,
                 height: 2500,
-            }, flat2, document.body);
+            }, {
+                nodes: flat2,
+                strings: names,
+            }, document.body);
             console.timeEnd("mt2");
         </script>
     </body>

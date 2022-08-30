@@ -29,7 +29,7 @@ const VALUE_THRESHOLD_ADAPTIVE = true;
 const VALUE_THRESHOLD = 0; // 1e-3, 2e-3, 0
 const LEVEL_THRESHOLD = 1e3;
 
-function matreeshka(opts, flat, targ) {
+function matreeshka(opts, {nodes, strings}, targ) {
 	const cellGap = 0.5;
 
 	let pxRatio = devicePixelRatio;
@@ -40,7 +40,7 @@ function matreeshka(opts, flat, targ) {
 	let stack = [];
 
 	// or sort() and take last element? or loop?
-	let levels = Math.max(...new Set(flat[0])) + 1;
+	let levels = Math.max(...new Set(nodes[0])) + 1;
 	let cellHgt;
 	let pxPerVal;
 
@@ -54,7 +54,7 @@ function matreeshka(opts, flat, targ) {
 	let can = document.createElement('canvas');
 	let ctx = can.getContext('2d');
 
-	let rootVal = flat[1][0];
+	let rootVal = nodes[1][0];
 
 	let chars = '';
 	for (let i = 32; i <= 126; i++)
@@ -71,48 +71,64 @@ function matreeshka(opts, flat, targ) {
 		let x0PosByLevel = Array(levels).fill(-1);
 		let x1PosByLevel = Array(levels).fill(-1);
 
-		let len = flat[0].length;
+		let len = nodes[0].length;
 
-		let baseVal = flat[1][idx];
+		let baseVal = nodes[1][idx];
 
 		pxPerVal = canWid / baseVal;
-		let zoomLvl = flat[0][idx];
+		let zoomLvl = nodes[0][idx];
 
 		// indicies from root in focused stack
-		stack = [];
+		stack = [idx];
 		let i;
 
-		// add all ancestors (except root, to avoid excess iteration)
-		i = idx;
-		let ancestLvl = zoomLvl;
-		while (ancestLvl > 1) {
-			i--;
-			let lvl = flat[0][i];
+		if (idx > 0) {
+			// add all ancestors (except root, to avoid excess iteration)
+			i = idx;
+			let ancestLvl = zoomLvl;
+			while (ancestLvl > 1) {
+				i--;
+				let lvl = nodes[0][i];
 
-			if (lvl < ancestLvl) {
-				stack.push(i);
-				ancestLvl = lvl;
+				if (lvl < ancestLvl) {
+					stack.push(i);
+					ancestLvl = lvl;
+				}
 			}
+
+			// add root
+			stack.push(0);
+
+			stack.reverse();
 		}
 
-		// add root
-		stack.push(0);
-
-		stack.reverse();
-
-		index = new Flatbush(1401, 512, Int16Array);
+		index = new Flatbush(nodes[0].length, 512, Int16Array);
 
 		ctx.clearRect(0, 0, canWid, canHgt);
 
 		let paths = palette.map(c => new Path2D());
 
+		function drawMerged(lvl, y) {
+			paletteIdx = 0;
+
+			let x = x0PosByLevel[lvl];
+			let cellWid = x1PosByLevel[lvl] - x;
+
+			let x0 = x + cellGap;
+			let y0 = y + cellGap;
+			let w = cellWid - cellGap * 2;
+			let h = cellHgt - cellGap * 2;
+			let fillPath = paths[paletteIdx];
+			fillPath.rect(x0, y0, w, h);
+		}
+
 		let lastSi = stack.length - 1;
 		let si = 0;
 		i = stack[si];
 		do {
-			let lvl  = flat[0][i];
-			let val  = flat[1][i];
-			let name = flat[2][i];
+			let lvl  = nodes[0][i];
+			let val  = nodes[1][i];
+			let nameIdx = nodes[2][i];
 
 			// custom matching function (by label, by value, by ancestor, by tag) -> color palette, random from narrow range, greens, oranges, pinks, blues, purples
 			// by % of total
@@ -138,41 +154,18 @@ function matreeshka(opts, flat, targ) {
 				if (cellWid < 7) {
 					// if end of prev cell at this level (if adjacent-ish by 1px)
 					if (x1PosByLevel[lvl] + 1 >= x) {
-						//merges++;
-						// merge!
 						x1PosByLevel[lvl] = x + cellWid;
 					} else {
-						// draw pending! if cell width > 5?
-						paletteIdx = 0;
-						let x2 = x0PosByLevel[lvl];
-						let cellWid2 = x1PosByLevel[lvl] - x2;
+						drawMerged(lvl, y);
 
-						let x0 = x2 + cellGap;
-						let y0 = y + cellGap;
-						let w = cellWid2 - cellGap * 2;
-						let h = cellHgt - cellGap * 2;
-						let fillPath = paths[paletteIdx];
-						fillPath.rect(x0, y0, w, h);
-
-						// reset, does nothing?
 						x0PosByLevel[lvl] = x; // start of merged cell
 						x1PosByLevel[lvl] = x + cellWid;
 					}
 				} else {
 					// draw pending! if cell width > 5?
-					paletteIdx = 0;
-					let x = x0PosByLevel[lvl];
-					let cellWid = x1PosByLevel[lvl] - x;
-
-					let x0 = x + cellGap;
-					let y0 = y + cellGap;
-					let w = cellWid - cellGap * 2;
-					let h = cellHgt - cellGap * 2;
-					let fillPath = paths[paletteIdx];
-					fillPath.rect(x0, y0, w, h);
-
+					drawMerged(lvl, y);
 					// reset
-					x0PosByLevel[lvl] = -1; // start of merged cell
+					x0PosByLevel[lvl] = -1;
 				}
 			}
 
@@ -193,7 +186,7 @@ function matreeshka(opts, flat, targ) {
 
 				if (maxChars > 1) {
 					//let label = `${name} (${val})`;
-					let label = name.split(" ")[0];
+					let label = strings[nameIdx].split(" ")[0];
 					ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
 				}
 			}
@@ -204,12 +197,9 @@ function matreeshka(opts, flat, targ) {
 			xPosByLevel[lvl] += cellWid;
 
 			i = si < lastSi ? stack[++si] : ++i;
-		} while (i < flat[0].length && (i <= idx || flat[0][i] > zoomLvl));
+		} while (i < nodes[0].length && (i <= idx || nodes[0][i] > zoomLvl));
 
-		// console.log('merges', merges);
-		// console.log('sm', sm);
-
-		console.log(stack);
+		//console.log(stack);
 
 		ctx.save();
 		ctx.globalCompositeOperation = 'destination-over';
