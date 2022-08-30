@@ -1,4 +1,4 @@
- const response = {
+ let response = {
     "results": {
         "A": {
             "frames": [

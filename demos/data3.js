@@ -2,7 +2,7 @@ const START_OFFSET = 0;
 const VALUE_OFFSET = 1;
 const NAME_OFFSET = 2;
 
-const response = {
+let response = {
     "results": {
         "A": {
             "frames": [
