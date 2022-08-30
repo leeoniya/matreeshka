@@ -38,7 +38,6 @@ function matreeshka(opts, flat, targ) {
 
 	let index;
 	let stack = [];
-	let dfltStack = Array.from(flat[0].keys());
 
 	// or sort() and take last element? or loop?
 	let levels = Math.max(...new Set(flat[0])) + 1;
@@ -79,74 +78,41 @@ function matreeshka(opts, flat, targ) {
 		pxPerVal = canWid / baseVal;
 		let zoomLvl = flat[0][idx];
 
-		if (zoomLvl == 0)
-			stack = dfltStack;
-		else {
-			// indicies from root in focused stack
-			stack = [];
-			let i;
+		// indicies from root in focused stack
+		stack = [];
+		let i;
 
-			// add all ancestors (except root, to avoid excess iteration)
-			i = idx;
-			let ancestLvl = zoomLvl;
-			while (ancestLvl > 1) {
-				i--;
-				let lvl = flat[0][i];
+		// add all ancestors (except root, to avoid excess iteration)
+		i = idx;
+		let ancestLvl = zoomLvl;
+		while (ancestLvl > 1) {
+			i--;
+			let lvl = flat[0][i];
 
-				if (lvl < ancestLvl) {
-					stack.push(i);
-					ancestLvl = lvl;
-				}
-			}
-
-			// add root
-			stack.push(0);
-
-			stack.reverse();
-
-			// add self & all descendants
-			i = idx;
-			do {
+			if (lvl < ancestLvl) {
 				stack.push(i);
-			} while (i++ < len && flat[0][i] > zoomLvl);
-		}
-
-		if (VALUE_THRESHOLD > 0 || LEVEL_THRESHOLD > 0) {
-			let valThresh = VALUE_THRESHOLD * (VALUE_THRESHOLD_ADAPTIVE ? baseVal : rootVal);
-
-			let _stack = [];
-
-			for (let i = 0; i < stack.length; i++) {
-				let fi = stack[i];
-				let val = flat[1][fi];
-				let lvl = flat[0][fi];
-
-				if (val >= valThresh && lvl <= LEVEL_THRESHOLD)
-					_stack.push(fi);
+				ancestLvl = lvl;
 			}
-
-			stack = _stack;
 		}
 
-		console.log("filtered", stack.length);
+		// add root
+		stack.push(0);
 
-		index = new Flatbush(stack.length, 512, Int16Array);
+		stack.reverse();
+
+		index = new Flatbush(1401, 512, Int16Array);
 
 		ctx.clearRect(0, 0, canWid, canHgt);
 
 		let paths = palette.map(c => new Path2D());
 
-		let merges = 0;
-		let sm = 0;
-
-		let si = 0, i;
+		let lastSi = stack.length - 1;
+		let si = 0;
+		i = stack[si];
 		do {
-			i = stack[si];
-
 			let lvl  = flat[0][i];
 			let val  = flat[1][i];
 			let name = flat[2][i];
-
 
 			// custom matching function (by label, by value, by ancestor, by tag) -> color palette, random from narrow range, greens, oranges, pinks, blues, purples
 			// by % of total
@@ -172,7 +138,7 @@ function matreeshka(opts, flat, targ) {
 				if (cellWid < 7) {
 					// if end of prev cell at this level (if adjacent-ish by 1px)
 					if (x1PosByLevel[lvl] + 1 >= x) {
-						merges++;
+						//merges++;
 						// merge!
 						x1PosByLevel[lvl] = x + cellWid;
 					} else {
@@ -220,7 +186,8 @@ function matreeshka(opts, flat, targ) {
 				let fillPath = paths[paletteIdx];
 
 				fillPath.rect(x0, y0, w, h);
-				index.add(x0, y0, x0 + w, y0 + h);
+				let i2 = index.add(x0, y0, x0 + w, y0 + h);
+				i > idx && stack.push(i);
 
 				let maxChars = Math.floor(w / pxPerChar);
 
@@ -230,19 +197,19 @@ function matreeshka(opts, flat, targ) {
 					ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
 				}
 			}
-			else {
-				//index.add(0, 0, 1, 1);
-				sm++;
-			}
 
 			for (let nxtLvl = lvl + 1, v = xPosByLevel[lvl]; nxtLvl < levels; nxtLvl++)
 				xPosByLevel[nxtLvl] = v;
 
 			xPosByLevel[lvl] += cellWid;
-		} while (++si < stack.length);
 
-		console.log('merges', merges);
-		console.log('sm', sm);
+			i = si < lastSi ? stack[++si] : ++i;
+		} while (i < flat[0].length && (i <= idx || flat[0][i] > zoomLvl));
+
+		// console.log('merges', merges);
+		// console.log('sm', sm);
+
+		console.log(stack);
 
 		ctx.save();
 		ctx.globalCompositeOperation = 'destination-over';
