@@ -114,12 +114,14 @@ function matreeshka(opts, nodes, targ) {
 			let x = x0PosByLevel[lvl];
 			let cellWid = x1PosByLevel[lvl] - x;
 
-			let x0 = x + cellGap;
-			let y0 = y + cellGap;
-			let w = cellWid - cellGap * 2;
-			let h = cellHgt - cellGap * 2;
-			let fillPath = paths[paletteIdx];
-			fillPath.rect(x0, y0, w, h);
+			if (cellWid - cellGap * 2 >= 0.5) {
+				let x0 = x + cellGap;
+				let y0 = y + cellGap;
+				let w = cellWid - cellGap * 2;
+				let h = cellHgt - cellGap * 2;
+				let fillPath = paths[paletteIdx];
+				fillPath.rect(x0, y0, w, h);
+			}
 		}
 
 		let lastSi = stack.length - 1;
@@ -198,6 +200,15 @@ function matreeshka(opts, nodes, targ) {
 
 			i = si < lastSi ? stack[++si] : ++i;
 		} while (i < nodes[0].length && (i <= idx || nodes[0][i] > zoomLvl));
+
+	//	console.log(x0PosByLevel);
+
+		for (let i = 0; i < x0PosByLevel.length; i++) {
+			if (x0PosByLevel[i] != -1) {
+				drawMerged(i, i * cellHgt);
+				x0PosByLevel[i] = -1;
+			}
+		}
 
 	//	console.log(stack);
 
