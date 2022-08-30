@@ -17,6 +17,7 @@ const palette = [
 const palette = [
 	'#eee',
 	"#a5d6a7",
+	"#b39ddb",
 ];
 
 // TODO: select palette (ant design, greens, reds) based on callback for index, choose random color from it?
@@ -30,6 +31,8 @@ const VALUE_THRESHOLD = 0; // 1e-3, 2e-3, 0
 const LEVEL_THRESHOLD = 1e3;
 
 function matreeshka(opts, nodes, targ) {
+	let search = '';
+
 	const cellGap = 0.5;
 
 	let pxRatio = devicePixelRatio;
@@ -62,8 +65,12 @@ function matreeshka(opts, nodes, targ) {
 
 	let pxPerChar = Math.ceil(ctx.measureText(chars).width / chars.length * pxRatio);
 
+	let curIdx = 0;
+
 	// render
 	function setFocus(idx) {
+		curIdx = idx;
+
 		// where the next sibling should start
 		let xPosByLevel = Array(levels).fill(0);
 
@@ -109,7 +116,7 @@ function matreeshka(opts, nodes, targ) {
 		let paths = palette.map(c => new Path2D());
 
 		function drawMerged(lvl, y) {
-			paletteIdx = 0;
+			let paletteIdx = 0;
 
 			let x = x0PosByLevel[lvl];
 			let cellWid = x1PosByLevel[lvl] - x;
@@ -139,7 +146,10 @@ function matreeshka(opts, nodes, targ) {
 		//	let paletteIdx = Math.min(Math.floor(pctOfTotal * palette.length), palette.length - 1);
 		//	let paletteIdx = Math.min(Math.floor(Math.random() * palette.length), palette.length - 1);
 
-			let paletteIdx = 1;
+			// match label
+			let shouldMark = search.length ? name.indexOf(search) != -1 : false;
+
+			let paletteIdx = shouldMark ? 2 : 1;
 
 			let cellWid = lvl <= zoomLvl ? canWid : val * pxPerVal;
 
@@ -171,8 +181,7 @@ function matreeshka(opts, nodes, targ) {
 				}
 			}
 
-			if (cellWid >= 7) {
-				paletteIdx = 1;
+			if (cellWid >= 7 || shouldMark) {
 				let x0 = x + cellGap;
 				let y0 = y + cellGap;
 				let w = cellWid - cellGap * 2;
@@ -215,7 +224,7 @@ function matreeshka(opts, nodes, targ) {
 		ctx.save();
 		ctx.globalCompositeOperation = 'destination-over';
 
-		for (let i = 0; i < paths.length; i++) {
+		for (let i = paths.length - 1; i >= 0; i--) {
 			ctx.fillStyle = palette[i];
 			ctx.fill(paths[i]);
 		}
@@ -227,6 +236,11 @@ function matreeshka(opts, nodes, targ) {
 
 	function setData() {
 
+	}
+
+	function setSearch(str) {
+		search = str;
+		setFocus(curIdx);
 	}
 
 	function setSize({width, height}) {
@@ -310,5 +324,6 @@ function matreeshka(opts, nodes, targ) {
 		setSize,
 		setData,
 		setFocus,
+		setSearch,
 	};
 }

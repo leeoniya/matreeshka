@@ -89,6 +89,7 @@
 
 			.matreeshka {
 				display: inline-block;
+				position: relative;
 			}
 
 			.matreeshka canvas {
@@ -105,6 +106,8 @@
 		</style>
 	</head>
 	<body>
+		<input id="search" type="text" placeholder="Search...">
+
 		<script>
 		/*
 			let tree = {
@@ -234,6 +237,10 @@
 				height: 2620,
 			}, flat2, document.body);
 			console.timeEnd("mt2");
+
+			document.querySelector("#search").addEventListener('input', e => {
+				mt2.setSearch(e.target.value);
+			});
 		</script>
 	</body>
 </html>
