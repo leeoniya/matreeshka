@@ -14,12 +14,6 @@ const palette = [
 ];
 */
 
-const palette = [
-	'#eee',
-	"#a5d6a7",
-	"#b39ddb",
-];
-
 // TODO: select palette (ant design, greens, reds) based on callback for index, choose random color from it?
 // TODO: color by time at top of stack (self)
 // TODO: name filter, other field filter, ancestor filter
@@ -32,6 +26,12 @@ const LEVEL_THRESHOLD = 1e3;
 
 function matreeshka(opts, nodes, targ) {
 	let search = '';
+
+	const palette = [
+		'#eee',
+		"#a5d6a7",
+		"#b39ddb",
+	];
 
 	const cellGap = 0.5;
 
@@ -190,7 +190,7 @@ function matreeshka(opts, nodes, targ) {
 				let fillPath = paths[paletteIdx];
 
 				fillPath.rect(x0, y0, w, h);
-				let i2 = index.add(x0, y0, x0 + w, y0 + h);
+				index.add(x0, y0, x0 + w, y0 + h);
 				i > idx && stack.push(i);
 
 				let maxChars = Math.floor(w / pxPerChar);
@@ -198,7 +198,7 @@ function matreeshka(opts, nodes, targ) {
 				if (maxChars > 1) {
 					//let label = `${name} (${val})`;
 					let label = name.split(" ")[0];
-					ctx.fillText(label.slice(0, maxChars - 1), x0, y0 + h/2);
+					ctx.fillText(label.slice(0, maxChars), x0, y0 + h/2, w);
 				}
 			}
 
@@ -254,6 +254,13 @@ function matreeshka(opts, nodes, targ) {
 		cellHgt = canHgt / levels;
 
 		ctx.font = '15px monospace';
+
+		// turn red at half window height
+		let grad = ctx.createLinearGradient(0, 0, 0, (window.innerHeight * pxRatio) / 2);
+		grad.addColorStop(0, '#ffe14d');
+		grad.addColorStop(1, '#ff7070');
+
+		palette[1] = grad;
 
 		setFocus(0);
 	}
